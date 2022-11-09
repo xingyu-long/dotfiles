@@ -28,7 +28,7 @@ mason_lspconfig.setup({
     "tailwindcss",
     "sumneko_lua",
     "emmet_ls",
-    "jedi_language_server",
+    "pyright", -- python lsp
   },
   -- auto-install configured servers (with lspconfig)
   automatic_installation = true, -- not the same as ensure_installed
@@ -40,6 +40,7 @@ mason_null_ls.setup({
     "prettier", -- ts/js formatter
     "stylua", -- lua formatter
     "eslint_d", -- ts/js linter
+    "yapf", -- Python formatter
   },
   -- auto-install configured formatters & linters (with null-ls)
   automatic_installation = true,
