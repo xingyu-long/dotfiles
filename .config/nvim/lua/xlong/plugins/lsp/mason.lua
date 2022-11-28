@@ -29,6 +29,7 @@ mason_lspconfig.setup({
     "sumneko_lua",
     "emmet_ls",
     "pyright", -- python lsp
+    "clangd", -- c lsp
   },
   -- auto-install configured servers (with lspconfig)
   automatic_installation = true, -- not the same as ensure_installed
