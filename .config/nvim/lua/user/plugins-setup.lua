@@ -113,6 +113,8 @@ return packer.startup(function(use)
   use("akinsho/bufferline.nvim")
   use("moll/vim-bbye")
 
+  -- toggle terminal
+  use("akinsho/toggleterm.nvim")
   if packer_bootstrap then
     require("packer").sync()
   end
