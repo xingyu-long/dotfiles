@@ -1,6 +1,33 @@
 ## Neovim Setup
 
 ```
+├── init.lua
+└── lua
+    └── xlong
+        ├── core
+        │   ├── colorscheme.lua
+        │   ├── keymaps.lua
+        │   └── options.lua
+        ├── plugins
+        │   ├── autopairs.lua
+        │   ├── bufferline.lua
+        │   ├── comment.lua
+        │   ├── gitsigns.lua
+        │   ├── lsp
+        │   │   ├── lspconfig.lua
+        │   │   ├── lspsaga.lua
+        │   │   ├── mason.lua
+        │   │   └── null-ls.lua
+        │   ├── lualine.lua
+        │   ├── nvim-cmp.lua
+        │   ├── nvim-tree.lua
+        │   ├── telescope.lua
+        │   └── treesitter.lua
+        └── plugins-setup.lua
+
+```
+
+```
 # install homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
