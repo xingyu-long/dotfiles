@@ -26,6 +26,15 @@ if not status then
   return
 end
 
+-- Have packer use a popup window
+packer.init({
+  display = {
+    open_fn = function()
+      return require("packer.util").float({ border = "rounded" })
+    end,
+  },
+})
+
 -- add list of plugins to install
 return packer.startup(function(use)
   -- packer can manage itself
@@ -91,6 +100,7 @@ return packer.startup(function(use)
       require("nvim-treesitter.install").update({ with_sync = true })
     end,
   })
+  use("p00f/nvim-ts-rainbow")
 
   -- auto closing
   use("windwp/nvim-autopairs") -- autoclose parens, brackets, quotes, etc...
@@ -98,6 +108,10 @@ return packer.startup(function(use)
 
   -- git integration
   use("lewis6991/gitsigns.nvim") -- show line modifications on left hand side
+
+  -- tab-like bufferline
+  use("akinsho/bufferline.nvim")
+  use("moll/vim-bbye")
 
   if packer_bootstrap then
     require("packer").sync()
