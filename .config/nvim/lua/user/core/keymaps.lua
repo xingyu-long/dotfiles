@@ -35,6 +35,9 @@ keymap.set("n", "<leader>tp", ":tabp<CR>") --  go to previous tab
 keymap.set("v", "<", "<gv")
 keymap.set("v", ">", ">gv")
 
+-- save file
+keymap.set("i", "<C-s>", "<Esc>:w<CR>")
+keymap.set("n", "<C-s>", ":w<CR>")
 ----------------------
 -- Plugin Keybinds
 ----------------------
@@ -52,7 +55,7 @@ keymap.set(
   "<leader>ff",
   "<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ previewer = false }))<cr>"
 )
-keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep<cr>") -- find string in current working directory as you type
+keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep theme=get_ivy<cr>") -- find string in current working directory as you type
 keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>") -- find string under cursor in current working directory
 keymap.set("n", "<leader>fb", "<cmd>Telescope buffers<cr>") -- list open buffers in current neovim instance
 keymap.set("n", "<leader>fh", "<cmd>Telescope help_tags<cr>") -- list available help tags
