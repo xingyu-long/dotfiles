@@ -115,6 +115,13 @@ return packer.startup(function(use)
 
   -- toggle terminal
   use("akinsho/toggleterm.nvim")
+
+  -- indentline
+  use("lukas-reineke/indent-blankline.nvim")
+
+  -- impatient: speed up loading Lua modules
+  use("lewis6991/impatient.nvim")
+
   if packer_bootstrap then
     require("packer").sync()
   end
