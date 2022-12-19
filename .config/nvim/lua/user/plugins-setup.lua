@@ -122,6 +122,9 @@ return packer.startup(function(use)
   -- impatient: speed up loading Lua modules
   use("lewis6991/impatient.nvim")
 
+  -- symbols-outline:
+  use("simrat39/symbols-outline.nvim")
+
   if packer_bootstrap then
     require("packer").sync()
   end
