@@ -32,5 +32,7 @@ lualine_nightfly.command = {
 lualine.setup({
   options = {
     theme = lualine_nightfly,
+    section_separators = '',
+    component_separators = ''
   },
 })
