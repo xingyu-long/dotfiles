@@ -55,6 +55,9 @@ local plugins = {
     }
   },
 
+  ["folke/which-key.nvim"] = {
+    disable = false,
+  }
   -- remove plugin
   -- ["hrsh7th/cmp-path"] = false,
 }

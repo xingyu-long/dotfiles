@@ -11,10 +11,6 @@ M.general = {
     ["<leader>se"] = { "<C-w>=" }, -- make split windows equal width & height
     ["<leader>sx"] = { ":close<CR>" }, -- close current split window
 
-    -- navigate buffers
-    ["<S-l>"] = { ":bnext<CR>" }, -- move to next buffer
-    ["<S-h>"] = { ":bprevious<CR>" }, -- back to the previous buffer 
-
   },
 
   v = {
@@ -25,6 +21,27 @@ M.general = {
 }
 
 -- more keybinds!
+M.tabufline = {
+  plugin = true,
+
+  n = {
+    -- cycle through buffers
+    ["<S-l>"] = {
+      function()
+        require("nvchad_ui.tabufline").tabuflineNext()
+      end,
+      "goto next buffer",
+    },
+
+    ["<S-h>"] = {
+      function()
+        require("nvchad_ui.tabufline").tabuflinePrev()
+      end,
+      "goto prev buffer",
+    },
+
+  },
+}
 
 M.telescope = {
   plugin = true,
