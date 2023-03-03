@@ -12,8 +12,8 @@ M.general = {
     ["<leader>sx"] = { ":close<CR>" }, -- close current split window
 
     -- navigate buffers
-    ["<S-l>"] = { ":bnext<CR>" }, -- make split windows equal width & height
-    ["<S-h>"] = { ":bprevious<CR>" }, -- close current split window
+    ["<S-l>"] = { ":bnext<CR>" }, -- move to next buffer
+    ["<S-h>"] = { ":bprevious<CR>" }, -- back to the previous buffer 
 
   },
 
