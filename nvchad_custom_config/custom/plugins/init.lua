@@ -42,6 +42,19 @@ local plugins = {
     end,
   },
 
+  ["christoomey/vim-tmux-navigator"] = {
+    disable = false
+  },
+
+  ["NvChad/ui"] = {
+    override_options = {
+      statusline = {
+        separator_style = "block", -- default/round/block/arrow
+        overriden_modules = nil,
+      },
+    }
+  },
+
   -- remove plugin
   -- ["hrsh7th/cmp-path"] = false,
 }
