@@ -1,31 +1,5 @@
 ## Neovim Setup
 
-```
-├── init.lua
-└── lua
-    └── xlong
-        ├── core
-        │   ├── colorscheme.lua
-        │   ├── keymaps.lua
-        │   └── options.lua
-        ├── plugins
-        │   ├── autopairs.lua
-        │   ├── bufferline.lua
-        │   ├── comment.lua
-        │   ├── gitsigns.lua
-        │   ├── lsp
-        │   │   ├── lspconfig.lua
-        │   │   ├── lspsaga.lua
-        │   │   ├── mason.lua
-        │   │   └── null-ls.lua
-        │   ├── lualine.lua
-        │   ├── nvim-cmp.lua
-        │   ├── nvim-tree.lua
-        │   ├── telescope.lua
-        │   └── treesitter.lua
-        └── plugins-setup.lua
-
-```
 
 ```
 # install homebrew
@@ -50,6 +24,11 @@ cp -r dotfiles/nvim  ~/.config/nvim
 # give it a try
 cd ~/.config/nvim/lua/xlong
 nvim plugins-setup.lua # once you opened it, Packer will install plugins
+
+# Using NvChad
+git clone https://github.com/NvChad/NvChad ~/.config/nvim --depth 1 && nvim
+# finish the packer and load custom folder into NvChad
+cp -r ./nvchad_custom_config/custom ~/.config/nvim/lua/
 
 ```
 
