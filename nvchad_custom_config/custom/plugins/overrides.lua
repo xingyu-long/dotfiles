@@ -41,6 +41,7 @@ M.nvimtree = {
 
   renderer = {
     highlight_git = true,
+    symlink_destination = false,
     icons = {
       show = {
         git = true,
