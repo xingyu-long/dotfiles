@@ -8,6 +8,8 @@ M.treesitter = {
     "css",
     "javascript",
     "c",
+    "cpp",
+    "python",
     "markdown",
     "markdown_inline",
   },
@@ -30,6 +32,12 @@ M.mason = {
     "html-lsp",
     "typescript-language-server",
     "deno",
+
+    -- python
+    "pyright",
+
+    -- c
+    "clangd",
   },
 }
 
@@ -41,6 +49,7 @@ M.nvimtree = {
 
   renderer = {
     highlight_git = true,
+    symlink_destination = false,
     icons = {
       show = {
         git = true,

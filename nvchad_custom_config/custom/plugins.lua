@@ -42,6 +42,11 @@ local plugins = {
     end,
   },
 
+  {
+    "christoomey/vim-tmux-navigator",
+    disable = false
+  },
+
   -- To make a plugin not be loaded
   -- {
   --   "NvChad/nvim-colorizer.lua",
