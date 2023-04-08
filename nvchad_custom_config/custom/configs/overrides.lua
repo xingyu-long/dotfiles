@@ -15,9 +15,6 @@ M.treesitter = {
   },
   indent = {
     enable = true,
-    disable = {
-      "python"
-    },
   },
 }
 
@@ -34,7 +31,11 @@ M.mason = {
     "deno",
 
     -- python
+    -- lsp
     "pyright",
+
+    -- formatter
+    "black",
 
     -- c
     "clangd",
