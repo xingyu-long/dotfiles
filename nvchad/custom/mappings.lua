@@ -11,6 +11,7 @@ M.general = {
     ["<leader>se"] = { "<C-w>=" }, -- make split windows equal width & height
     ["<leader>sx"] = { ":close<CR>" }, -- close current split window
 
+    ["<C-g>"] = { ":LazyGit<CR>" }, -- toggle lazygit
   },
 
   v = {
