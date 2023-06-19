@@ -39,6 +39,11 @@ M.mason = {
 
     -- c
     "clangd",
+
+    -- golang
+    "gofumpt",
+    "goimports-reviser",
+    "golines",
   },
 }
 

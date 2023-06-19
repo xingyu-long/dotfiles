@@ -20,6 +20,11 @@ local sources = {
 
   -- python
   b.formatting.black,
+
+  -- golang
+  b.formatting.golines,
+  b.formatting.gofumpt,
+  b.formatting.goimports_reviser,
 }
 
 null_ls.setup {
