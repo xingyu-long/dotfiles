@@ -50,96 +50,9 @@
     "terminal.integrated.enableMultiLinePasteWarning": false,
     "terminal.integrated.copyOnSelection": true,
     // ================== terminal ====================
-
-    // ================ vim ==================
-    /*
-    "vim.leader": "<space>",
-    "vim.easymotion": true,
-    "vim.incsearch": true,
-    "vim.useSystemClipboard": true,
-    "vim.useCtrlKeys": true,
-    "vim.hlsearch": true,
-	  "vim.searchHighlightColor": "yellow",
-	  "vim.searchHighlightTextColor": "black",
-
-    "vim.insertModeKeyBindings": [
-      {
-        "before": ["j", "k"],
-        "after": ["<Esc>"]
-      }
-    ],
-    "vim.visualModeKeyBindings": [
-      // Stay in visual mode while indenting
-      { "before": ["<S-<>"], "commands": ["editor.action.outdentLines"] },
-      { "before": ["<S->>"], "commands": ["editor.action.indentLines"] },
-    ],
-    "vim.normalModeKeyBindingsNonRecursive": [
-      // NAVIGATION
-      // switch b/w buffers
-      { "before": ["<S-h>"], "commands": [":bprevious"] },
-      { "before": ["<S-l>"], "commands": [":bnext"] },
-      // splits
-      { 
-        "before": ["leader", "s", "v"], 
-        "commands": ["workbench.action.splitEditor"]
-      },
-      { 
-        "before": ["leader", "s", "h"], 
-        "commands": ["workbench.action.splitEditorDown"]
-      },
-      // panes
-      {
-        "before": ["<C-h>"],
-        // "commands": ["workbench.action.focusLeftGroup"]
-        "commands": ["workbench.action.navigateLeft"]
-      },
-      {
-        "before": ["<C-j>"],
-        // "commands": ["workbench.action.focusBelowGroup"]
-        "commands": ["workbench.action.navigateDown"]
-      },
-      {
-        "before": ["<C-k>"],
-        // "commands": ["workbench.action.focusAboveGroup"]
-        "commands": ["workbench.action.navigateUp"]
-      },
-      {
-        "before": ["<C-l>"],
-        // "commands": ["workbench.action.focusRightGroup"]
-        "commands": ["workbench.action.navigateRight"]
-      },
-      // file tree
-      {
-        "before": ["leader", "e"], 
-        "commands": ["workbench.action.toggleSidebarVisibility"]
-      },
-      // search file 
-      {
-        "before": ["leader", "f", "f"], 
-        "commands": ["workbench.action.quickOpen"]
-      },
-      // comment
-      { "before": ["leader", "/"], 
-        "commands": ["editor.action.commentLine"],
-      },
-      // ESC -> no highlight
-      { "before": ["<Esc>"], 
-        "commands": [":nohl"],
-      },
-      { 
-        "before": ["leader", "x"], 
-        "commands": ["workbench.action.closeActiveEditor"]
-      },
-    ],
-    "vim.handleKeys": {
-      "<C-a>": false,
-      "<C-f>": false
-    },
-    */
   
     // To improve performance
     "extensions.experimental.affinity": {
-      "vscodevim.vim": 1,
       "asvetliakov.vscode-neovim": 1
     },
     // ================ vim ==================

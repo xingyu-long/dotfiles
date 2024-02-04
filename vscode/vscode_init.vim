@@ -1,6 +1,5 @@
 if exists('g:vscode')
     " VSCode extension
-    
     let g:mapleader = " "
 
     " search file
