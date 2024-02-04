@@ -1,0 +1,157 @@
+{
+    "editor.suggestSelection": "first",
+    "editor.fontSize": 22,
+    "window.commandCenter": false,
+    "explorer.confirmDelete": false,
+    "search.useIgnoreFiles": false,
+    "git.ignoreMissingGitWarning": true,
+    "python.languageServer": "Pylance",
+    "git.ignoreRebaseWarning": true,
+    "security.workspace.trust.untrustedFiles": "open",
+    "workbench.editor.enablePreview": false,
+
+    "editor.accessibilitySupport": "off",
+    "go.toolsManagement.autoUpdate": true,
+    "[python]": {
+    
+        "gitlens.codeLens.symbolScopes": [
+            "!Module"
+        ],
+        "editor.formatOnType": true
+    },
+    "editor.minimap.enabled": false,
+
+    // ================== file ======================
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true,
+    },
+    "search.exclude": {
+        "**/Build": true,
+        "**/build": true,
+    },
+    "files.autoSave": "afterDelay",
+    // ================== file ======================
+
+    // ================== theme =====================
+    "workbench.colorTheme": "GitHub Dark",
+    "workbench.iconTheme": "material-icon-theme",
+    // Controls the font family.
+    "editor.fontFamily": "JetBrainsMono Nerd Font",
+    // Controls the line height. Use 0 to compute the lineHeight from the fontSize.
+    "editor.lineHeight": 24,
+    // ================== theme =====================
+
+    // ================== terminal ====================
+    "terminal.integrated.fontSize": 18,
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "terminal.integrated.copyOnSelection": true,
+    // ================== terminal ====================
+
+    // ================ vim ==================
+    /*
+    "vim.leader": "<space>",
+    "vim.easymotion": true,
+    "vim.incsearch": true,
+    "vim.useSystemClipboard": true,
+    "vim.useCtrlKeys": true,
+    "vim.hlsearch": true,
+	  "vim.searchHighlightColor": "yellow",
+	  "vim.searchHighlightTextColor": "black",
+
+    "vim.insertModeKeyBindings": [
+      {
+        "before": ["j", "k"],
+        "after": ["<Esc>"]
+      }
+    ],
+    "vim.visualModeKeyBindings": [
+      // Stay in visual mode while indenting
+      { "before": ["<S-<>"], "commands": ["editor.action.outdentLines"] },
+      { "before": ["<S->>"], "commands": ["editor.action.indentLines"] },
+    ],
+    "vim.normalModeKeyBindingsNonRecursive": [
+      // NAVIGATION
+      // switch b/w buffers
+      { "before": ["<S-h>"], "commands": [":bprevious"] },
+      { "before": ["<S-l>"], "commands": [":bnext"] },
+      // splits
+      { 
+        "before": ["leader", "s", "v"], 
+        "commands": ["workbench.action.splitEditor"]
+      },
+      { 
+        "before": ["leader", "s", "h"], 
+        "commands": ["workbench.action.splitEditorDown"]
+      },
+      // panes
+      {
+        "before": ["<C-h>"],
+        // "commands": ["workbench.action.focusLeftGroup"]
+        "commands": ["workbench.action.navigateLeft"]
+      },
+      {
+        "before": ["<C-j>"],
+        // "commands": ["workbench.action.focusBelowGroup"]
+        "commands": ["workbench.action.navigateDown"]
+      },
+      {
+        "before": ["<C-k>"],
+        // "commands": ["workbench.action.focusAboveGroup"]
+        "commands": ["workbench.action.navigateUp"]
+      },
+      {
+        "before": ["<C-l>"],
+        // "commands": ["workbench.action.focusRightGroup"]
+        "commands": ["workbench.action.navigateRight"]
+      },
+      // file tree
+      {
+        "before": ["leader", "e"], 
+        "commands": ["workbench.action.toggleSidebarVisibility"]
+      },
+      // search file 
+      {
+        "before": ["leader", "f", "f"], 
+        "commands": ["workbench.action.quickOpen"]
+      },
+      // comment
+      { "before": ["leader", "/"], 
+        "commands": ["editor.action.commentLine"],
+      },
+      // ESC -> no highlight
+      { "before": ["<Esc>"], 
+        "commands": [":nohl"],
+      },
+      { 
+        "before": ["leader", "x"], 
+        "commands": ["workbench.action.closeActiveEditor"]
+      },
+    ],
+    "vim.handleKeys": {
+      "<C-a>": false,
+      "<C-f>": false
+    },
+    */
+  
+    // To improve performance
+    "extensions.experimental.affinity": {
+      "vscodevim.vim": 1,
+      "asvetliakov.vscode-neovim": 1
+    },
+    // ================ vim ==================
+
+    // ================ Neovim ==================
+    "vscode-neovim.neovimExecutablePaths.darwin": "/usr/local/bin/nvim",
+    "vscode-neovim.neovimInitVimPaths.darwin": "$HOME/.config/nvim/init.vim",
+    
+    // ================ Neovim ==================
+
+    "python.analysis.extraPaths": [],
+    "cmake.configureOnOpen": false,
+    "cmake.showOptionsMovedNotification": false,
+    "window.zoomLevel": 1,
+}
