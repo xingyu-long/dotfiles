@@ -15,7 +15,7 @@ return {
 
         -- python
         --- lsp
-        "pyright",
+        "jedi-language-server",
         --- formatter
         "black",
 
