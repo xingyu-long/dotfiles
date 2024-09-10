@@ -21,6 +21,10 @@ return {
 
         -- c
         "clangd",
+
+        -- golang
+        "gopls",
+        "gofumpt",
       },
     },
   },
@@ -37,6 +41,7 @@ return {
         "javascript",
         "c",
         "cpp",
+        "go",
         "python",
         "markdown",
         "markdown_inline",
