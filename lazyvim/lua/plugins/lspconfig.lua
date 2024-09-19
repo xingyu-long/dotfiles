@@ -54,6 +54,12 @@ return {
     "stevearc/conform.nvim",
     opts = {
       format_on_save = false,
+      optional = true,
+      opts = {
+        formatters_by_ft = {
+          ["python"] = { "black" },
+        },
+      },
     },
   },
 }
