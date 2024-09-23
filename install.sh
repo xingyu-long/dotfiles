@@ -72,9 +72,16 @@ backup_and_install_lazyvim() {
 
   for dir in "${dirs_to_backup[@]}"; do
     if [ -d "$dir" ]; then
-      backup_dir="${dir}.bak"
-      echo "Backing up $dir to $backup_dir"
-      mv "$dir" "$backup_dir"
+        backup_dir="${dir}.bak"
+
+        # Remove the existing backup directory if it exists
+        if [ -d "$backup_dir" ]; then
+            echo "Removing existing backup directory $backup_dir"
+            rm -rf "$backup_dir"
+        fi
+
+        echo "Backing up $dir to $backup_dir"
+        mv "$dir" "$backup_dir"
     fi
   done
 
