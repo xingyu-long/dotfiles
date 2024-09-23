@@ -52,13 +52,11 @@ return {
   -- formatter
   {
     "stevearc/conform.nvim",
+    optional = true,
     opts = {
       format_on_save = false,
-      optional = true,
-      opts = {
-        formatters_by_ft = {
-          ["python"] = { "black" },
-        },
+      formatters_by_ft = {
+        ["python"] = { "black" },
       },
     },
   },
