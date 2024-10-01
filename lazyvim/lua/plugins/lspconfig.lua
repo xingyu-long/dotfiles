@@ -18,6 +18,7 @@ return {
         "jedi-language-server",
         --- formatter
         "black",
+        "isort",
 
         -- c
         "clangd",
@@ -56,7 +57,7 @@ return {
     opts = {
       format_on_save = false,
       formatters_by_ft = {
-        ["python"] = { "black" },
+        ["python"] = { "black", "isort" },
       },
     },
   },
