@@ -125,3 +125,7 @@ backup_and_install_lazyvim
 setup_tmux_conf
 echo "Enjoy your new development environment!"
 
+# TODO:
+# 1. ".zshrc" template with pre-installed plugins
+# 2. lazygit
+# 3. use homebrew for linux as well
