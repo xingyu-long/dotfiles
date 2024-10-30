@@ -1,11 +1,9 @@
-import = ["/Users/xlong/.config/alacritty/dracula.toml"]
 
 [env]
 TERM = "xterm-256color"
 
 [font]
 size = 22.0
-# size = 18.0
 
 [font.bold]
 family = "JetBrainsMono Nerd Font"
@@ -33,3 +31,6 @@ dynamic_padding = true
 [window.dimensions]
 columns = 100
 lines = 25
+
+[general]
+import = ["~/.config/alacritty/themes/themes/catppuccin_frappe.toml"]
