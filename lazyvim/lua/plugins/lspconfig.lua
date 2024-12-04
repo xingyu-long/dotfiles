@@ -7,12 +7,6 @@ return {
         "lua-language-server",
         "stylua",
 
-        -- web dev stuff
-        "css-lsp",
-        "html-lsp",
-        "typescript-language-server",
-        "deno",
-
         -- python
         --- lsp
         "jedi-language-server",
@@ -26,6 +20,9 @@ return {
         -- golang
         "gopls",
         "gofumpt",
+
+        -- java
+        "java-language-server",
       },
     },
   },
@@ -43,6 +40,7 @@ return {
         "c",
         "cpp",
         "go",
+        "java",
         "python",
         "markdown",
         "markdown_inline",
