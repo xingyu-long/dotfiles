@@ -3,7 +3,7 @@
 TERM = "xterm-256color"
 
 [font]
-size = 22.0
+size = 16.0
 
 [font.bold]
 family = "JetBrainsMono Nerd Font"
@@ -33,4 +33,4 @@ columns = 100
 lines = 25
 
 [general]
-import = ["~/.config/alacritty/themes/themes/catppuccin_frappe.toml"]
+import = ["~/.config/alacritty/themes/themes/catppuccin_macchiato.toml"]
