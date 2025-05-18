@@ -1,0 +1,59 @@
+format = """
+[#](blue) \
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$time\
+$line_break\
+$character\
+"""
+
+# User
+[username]
+style_user = 'cyan bold'
+style_root = 'red bold'
+disabled = false
+show_always = true
+format = "[$user]($style) "
+
+# Hostname (Machine name)
+[hostname]
+ssh_only = false
+format = "@ [$hostname](green) "
+
+# Directory
+[directory]
+style = "bold yellow"
+home_symbol = "~"
+format = "in [$path]($style) "
+
+# Git Branch
+[git_branch]
+style = "cyan"
+format = "on git:[$branch]($style)"
+
+# Git Status
+[git_status]
+format = '[$all_status$ahead_behind]($style) '
+style = "red"
+staged = ''
+modified = ' x'
+untracked = ' x'
+conflicted = ' x'
+ahead = ' ⇡'
+behind = ' ⇣'
+diverged = ' ⇕'
+deleted = ' x'
+renamed = ' x'
+
+[time]
+disabled = false
+format = '[\[$time\]](white)'
+time_format = '%T'
+
+# Character ($)
+[character]
+success_symbol = "[\\$](red)"
+error_symbol = "[\\$](bold red)"
