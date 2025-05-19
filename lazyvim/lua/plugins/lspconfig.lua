@@ -9,10 +9,9 @@ return {
 
         -- python
         --- lsp
-        "jedi-language-server",
+        "basedpyright",
         --- formatter
-        "black",
-        "isort",
+        "ruff",
 
         -- c
         "clangd",
@@ -20,9 +19,6 @@ return {
         -- golang
         "gopls",
         "gofumpt",
-
-        -- java
-        "java-language-server",
       },
     },
   },
@@ -55,7 +51,7 @@ return {
     opts = {
       format_on_save = false,
       formatters_by_ft = {
-        ["python"] = { "black", "isort" },
+        ["python"] = { "ruff_format", "ruff_fix" },
       },
     },
   },

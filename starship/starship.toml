@@ -5,6 +5,7 @@ $hostname\
 $directory\
 $git_branch\
 $git_status\
+${custom.python_venv_only}\
 $time\
 $line_break\
 $character\
@@ -32,21 +33,22 @@ format = "in [$path]($style) "
 # Git Branch
 [git_branch]
 style = "cyan"
-format = "on git:[$branch]($style)"
+format = "[$branch]($style)"
 
 # Git Status
 [git_status]
-format = '[$all_status$ahead_behind]($style) '
-style = "red"
-staged = ''
-modified = ' x'
-untracked = ' x'
-conflicted = ' x'
-ahead = ' ⇡'
-behind = ' ⇣'
-diverged = ' ⇕'
-deleted = ' x'
-renamed = ' x'
+format = '([\[$all_status$ahead_behind\]]($style)) '
+
+[custom.python_venv_only]
+description = "Show Python info only when a venv is active"
+command = '''
+    python_version=$(python --version 2>&1 | awk "{print \$2}")
+    venv_name=$(basename "$VIRTUAL_ENV")
+    echo " v$python_version($venv_name)"
+'''
+when = '[[ -n "$VIRTUAL_ENV" ]]'
+format = "[$output]($style) "
+style = "bold yellow"
 
 [time]
 disabled = false
