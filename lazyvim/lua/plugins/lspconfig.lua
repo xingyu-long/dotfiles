@@ -55,4 +55,19 @@ return {
       },
     },
   },
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        basedpyright = {
+          settings = {
+            basedpyright = {
+              typeCheckingMode = "basic", -- or "basic", or "strict"
+              analysis = {},
+            },
+          },
+        },
+      },
+    },
+  },
 }
