@@ -1,6 +1,8 @@
 return {
   {
-    "williamboman/mason.nvim",
+    -- use fixed version to workaround, see https://github.com/LazyVim/LazyVim/issues/6039
+    "mason-org/mason.nvim",
+    version = "^1.0.0",
     opts = {
       ensure_installed = {
         -- lua stuff
@@ -22,7 +24,7 @@ return {
       },
     },
   },
-
+  { "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
   -- add more treesitter parsers
   {
     "nvim-treesitter/nvim-treesitter",
