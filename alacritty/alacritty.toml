@@ -3,7 +3,8 @@
 TERM = "xterm-256color"
 
 [font]
-size = 16.0
+# size = 16.0
+size = 22.0
 
 [font.bold]
 family = "JetBrainsMono Nerd Font"
@@ -33,4 +34,4 @@ columns = 100
 lines = 25
 
 [general]
-import = ["~/.config/alacritty/themes/themes/dracula.toml"]
+import = ["~/.config/alacritty/dracula.toml"]

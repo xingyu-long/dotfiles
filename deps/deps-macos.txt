@@ -1,0 +1,26 @@
+# macOS Dependencies for dotfiles
+# One package per line, comments start with #
+
+# Editor
+neovim
+
+# General tools
+fzf
+node
+ripgrep
+tree
+wget
+tmux
+gnupg
+# needed for lazyvim v15
+tree-sitter-cli
+
+# Python tools
+uv
+
+# Git tool
+lazygit
+
+# Zsh plugins
+zsh-autosuggestions
+zsh-syntax-highlighting
