@@ -30,17 +30,17 @@ fail () {
   exit 1
 }
 
-# Function to install packages on macOS using Homebrew
+# Function to install packages using Homebrew
 install_macos_packages() {
-  info "Checking and installing packages for macOS..."
+  info "Checking and installing packages..."
   
   # Check if Homebrew is installed
   if ! command -v brew &>/dev/null; then
     info "Homebrew not found. Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
-    # Add Homebrew to PATH for Apple Silicon Macs
-    if [[ $(uname -m) == "arm64" ]]; then
+    # Add Homebrew to PATH for Apple Silicon Macs (macOS only)
+    if [[ "$OSTYPE" == "darwin"* ]] && [[ $(uname -m) == "arm64" ]]; then
       # Check if the line already exists in .zprofile to avoid duplicates
       if ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.zprofile 2>/dev/null; then
         echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
@@ -220,7 +220,12 @@ copy_additional_files() {
   
   # Copy vscode settings
   if [ -f "$DOTFILES/vscode/settings.json" ]; then
-    local vscode_dir="$HOME/Library/Application Support/Code/User"
+    # Different paths for macOS vs Linux
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      local vscode_dir="$HOME/Library/Application Support/Code/User"
+    else
+      local vscode_dir="$HOME/.config/Code/User"
+    fi
     local vscode_dst="$vscode_dir/settings.json"
     mkdir -p "$vscode_dir"
     
@@ -284,9 +289,12 @@ main() {
   info "This script is idempotent - safe to run multiple times"
   echo ""
 
-  # Check if running on macOS
+  # Check if running on macOS or if Homebrew is available on non-Mac
   if [[ "$OSTYPE" != "darwin"* ]]; then
-    fail "This script currently only supports macOS"
+    if ! command -v brew &>/dev/null; then
+      fail "This script currently only supports macOS. On non-Mac systems, Homebrew must be preinstalled."
+    fi
+    info "Detected non-macOS system with Homebrew installed, continuing..."
   fi
 
   # Track what was done
