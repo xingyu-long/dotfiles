@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # install.sh - Main installation script for dotfiles
 # This script installs necessary packages for macOS and creates symbolic links
