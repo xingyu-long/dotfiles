@@ -9,7 +9,7 @@ return {
 
         -- python
         --- lsp
-        "basedpyright",
+        "ty",
         --- formatter
         "ruff",
 
@@ -59,11 +59,18 @@ return {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
-        basedpyright = {
+        ty = {
           settings = {
-            basedpyright = {
-              typeCheckingMode = "basic", -- or "basic", or "strict"
-              analysis = {},
+            ty = {
+              completions = {
+                autoImport = true,
+              },
+              -- Set to 'openFilesOnly' to only see diagnostics for files you are editing
+              diagnosticMode = "openFilesOnly",
+              inlayHints = {
+                variableTypes = true,
+                callArgumentNames = true,
+              },
             },
           },
         },
