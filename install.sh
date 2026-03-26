@@ -77,13 +77,13 @@ install_macos_packages() {
       info "Installing $package..."
       if brew install "$package"; then
         success "$package installed"
-        ((installed_count++))
+        installed_count=$((installed_count + 1))
       else
         fail "Failed to install $package"
       fi
     else
       success "$package is already installed"
-      ((skipped_count++))
+      skipped_count=$((skipped_count + 1))
     fi
   done
   
