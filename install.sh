@@ -185,6 +185,29 @@ install_dotfiles() {
   done
 }
 
+# Function to install TPM and tmux plugins
+setup_tmux() {
+  local tpm_dir="$HOME/.tmux/plugins/tpm"
+
+  if [ ! -d "$tpm_dir" ]; then
+    info "Installing TPM (Tmux Plugin Manager)..."
+    if git clone https://github.com/tmux-plugins/tpm "$tpm_dir"; then
+      success "TPM installed"
+    else
+      fail "Failed to clone TPM"
+    fi
+  else
+    success "TPM is already installed"
+  fi
+
+  info "Installing tmux plugins..."
+  if "$tpm_dir/bin/install_plugins"; then
+    success "tmux plugins installed"
+  else
+    fail "Failed to install tmux plugins"
+  fi
+}
+
 # Function to create environment file
 create_env_file() {
   if test -f "$HOME/.env.sh"; then
@@ -301,6 +324,7 @@ main() {
   local packages_installed=false
   local symlinks_created=false
   local files_copied=false
+  local tmux_setup=false
   local env_created=false
 
   # Install packages
@@ -318,6 +342,11 @@ main() {
   files_copied=true
   echo ""
 
+  # Set up tmux (TPM + plugins)
+  setup_tmux
+  tmux_setup=true
+  echo ""
+
   # Create environment file
   create_env_file
   env_created=true
@@ -329,11 +358,12 @@ main() {
   echo "  ✓ Package installation: $([ "$packages_installed" = true ] && echo "completed" || echo "skipped")"
   echo "  ✓ Symbolic links: $([ "$symlinks_created" = true ] && echo "created/verified" || echo "skipped")"
   echo "  ✓ Configuration files: $([ "$files_copied" = true ] && echo "copied/updated" || echo "skipped")"
+  echo "  ✓ Tmux setup: $([ "$tmux_setup" = true ] && echo "completed" || echo "skipped")"
   echo "  ✓ Environment setup: $([ "$env_created" = true ] && echo "completed" || echo "skipped")"
   echo ""
   info "Next steps:"
   echo "  - Restart your terminal or run 'source ~/.zshrc'"
-  echo "  - For tmux: install plugins with Ctrl+A, Shift+I"
+  echo "  - For tmux: plugins were installed automatically; reload with Ctrl+A, r"
   echo "  - For neovim: run 'nvim' to initialize LazyVim"
   echo ""
   info "You can run this script again anytime to update configurations!"
