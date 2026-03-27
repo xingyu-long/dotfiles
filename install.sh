@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # install.sh - Main installation script for dotfiles
-# This script installs necessary packages for macOS and creates symbolic links
-# based on links.prop files in each component folder.
+# This script installs Homebrew (if needed), installs packages, and creates
+# symbolic links based on links.prop files in each component folder.
 # Packages are read from deps/deps-macos.txt file.
 
 set -e
@@ -30,24 +30,25 @@ fail () {
   exit 1
 }
 
+# Eval Homebrew shellenv from the first known install path found
+_brew_shellenv() {
+  local brew_path
+  for brew_path in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
+    if [[ -x "$brew_path" ]]; then
+      eval "$("$brew_path" shellenv)"
+      return 0
+    fi
+  done
+}
+
 # Function to install packages using Homebrew
-install_macos_packages() {
+install_packages() {
   info "Checking and installing packages..."
-  
-  # Check if Homebrew is installed
+
   if ! command -v brew &>/dev/null; then
     info "Homebrew not found. Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    
-    # Add Homebrew to PATH for Apple Silicon Macs (macOS only)
-    if [[ "$OSTYPE" == "darwin"* ]] && [[ $(uname -m) == "arm64" ]]; then
-      # Check if the line already exists in .zprofile to avoid duplicates
-      if ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.zprofile 2>/dev/null; then
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-        success "Added Homebrew to PATH in ~/.zprofile"
-      fi
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-    fi
+    _brew_shellenv
     success "Homebrew installed successfully"
   else
     success "Homebrew is already installed"
@@ -185,6 +186,22 @@ install_dotfiles() {
   done
 }
 
+# Function to install Oh My Zsh
+setup_ohmyzsh() {
+  local omz_dir="$HOME/.oh-my-zsh"
+
+  if [ ! -d "$omz_dir" ]; then
+    info "Installing Oh My Zsh..."
+    if RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; then
+      success "Oh My Zsh installed"
+    else
+      fail "Failed to install Oh My Zsh"
+    fi
+  else
+    success "Oh My Zsh is already installed"
+  fi
+}
+
 # Function to install TPM and tmux plugins
 setup_tmux() {
   local tpm_dir="$HOME/.tmux/plugins/tpm"
@@ -274,23 +291,16 @@ main() {
   info "This script is idempotent - safe to run multiple times"
   echo ""
 
-  # Check if running on macOS or if Homebrew is available on non-Mac
-  if [[ "$OSTYPE" != "darwin"* ]]; then
-    if ! command -v brew &>/dev/null; then
-      fail "This script currently only supports macOS. On non-Mac systems, Homebrew must be preinstalled."
-    fi
-    info "Detected non-macOS system with Homebrew installed, continuing..."
-  fi
-
   # Track what was done
   local packages_installed=false
   local symlinks_created=false
   local files_copied=false
+  local ohmyzsh_setup=false
   local tmux_setup=false
   local env_created=false
 
   # Install packages
-  install_macos_packages
+  install_packages
   packages_installed=true
   echo ""
 
@@ -302,6 +312,11 @@ main() {
   # Copy additional files
   copy_additional_files
   files_copied=true
+  echo ""
+
+  # Install Oh My Zsh
+  setup_ohmyzsh
+  ohmyzsh_setup=true
   echo ""
 
   # Set up tmux (TPM + plugins)
@@ -320,6 +335,7 @@ main() {
   echo "  ✓ Package installation: $([ "$packages_installed" = true ] && echo "completed" || echo "skipped")"
   echo "  ✓ Symbolic links: $([ "$symlinks_created" = true ] && echo "created/verified" || echo "skipped")"
   echo "  ✓ Configuration files: $([ "$files_copied" = true ] && echo "copied/updated" || echo "skipped")"
+  echo "  ✓ Oh My Zsh: $([ "$ohmyzsh_setup" = true ] && echo "completed" || echo "skipped")"
   echo "  ✓ Tmux setup: $([ "$tmux_setup" = true ] && echo "completed" || echo "skipped")"
   echo "  ✓ Environment setup: $([ "$env_created" = true ] && echo "completed" || echo "skipped")"
   echo ""

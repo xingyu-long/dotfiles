@@ -110,4 +110,8 @@ alias lg="lazygit"
 
 # Homebrew config
 export DISABLE_AUTO_UPDATE="true"
-eval "$(/opt/homebrew/bin/brew shellenv)"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
