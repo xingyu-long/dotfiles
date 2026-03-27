@@ -1,0 +1,46 @@
+name: Test Install Script
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Static analysis
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        run: find . -type f -name "*.sh" -exec shellcheck {} +
+
+  # Format check
+  shfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shfmt
+        run: sudo apt-get install -y shfmt
+      - name: Check formatting
+        run: shfmt -d .
+
+  # Full install smoke test inside Docker (Linux / Homebrew Linux path)
+  test-linux:
+    runs-on: ubuntu-latest
+    needs: [shellcheck, shfmt]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker test image
+        run: docker build -f Dockerfile.test -t dotfiles-test .
+
+      - name: Verify installation
+        run: |
+          docker run --rm dotfiles-test zsh -c "
+            eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" &&
+            brew --version && echo 'brew: OK' &&
+            [ -d \$HOME/.oh-my-zsh ] && echo 'oh-my-zsh: OK' &&
+            [ -L \$HOME/.zshrc ] && echo '.zshrc symlink: OK' &&
+            [ -d \$HOME/.tmux/plugins/tpm ] && echo 'tpm: OK'
+          "

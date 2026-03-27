@@ -47,7 +47,7 @@ install_packages() {
 
   if ! command -v brew &>/dev/null; then
     info "Homebrew not found. Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     _brew_shellenv
     success "Homebrew installed successfully"
   else
@@ -218,11 +218,13 @@ setup_tmux() {
   fi
 
   info "Installing tmux plugins..."
+  tmux new-session -d -s tpm_install 2>/dev/null || true
   if "$tpm_dir/bin/install_plugins"; then
     success "tmux plugins installed"
   else
     fail "Failed to install tmux plugins"
   fi
+  tmux kill-session -t tpm_install 2>/dev/null || true
 }
 
 # Function to create environment file
