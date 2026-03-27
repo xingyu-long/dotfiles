@@ -1,0 +1,2 @@
+$DOTFILES/wezterm/wezterm.lua=$HOME/.config/wezterm/wezterm.lua
+$DOTFILES/wezterm/colors/dracula.toml=$HOME/.config/wezterm/colors/dracula.toml

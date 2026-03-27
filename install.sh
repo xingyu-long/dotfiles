@@ -265,44 +265,6 @@ copy_additional_files() {
     fi
   fi
   
-  # Copy wezterm config
-  if [ -f "$DOTFILES/wezterm/wezterm.lua" ]; then
-    local wezterm_dir="$HOME/.config/wezterm"
-    local wezterm_dst="$wezterm_dir/wezterm.lua"
-    mkdir -p "$wezterm_dir"
-    
-    if [ -f "$wezterm_dst" ]; then
-      if ! cmp -s "$DOTFILES/wezterm/wezterm.lua" "$wezterm_dst"; then
-        cp "$DOTFILES/wezterm/wezterm.lua" "$wezterm_dst"
-        success "updated wezterm config"
-      else
-        success "wezterm config is already up to date"
-      fi
-    else
-      cp "$DOTFILES/wezterm/wezterm.lua" "$wezterm_dst"
-      success "copied wezterm config"
-    fi
-  fi
-  
-  # Copy wezterm colors
-  if [ -d "$DOTFILES/wezterm/colors" ]; then
-    local wezterm_dir="$HOME/.config/wezterm"
-    local wezterm_colors_dst="$wezterm_dir/colors"
-    mkdir -p "$wezterm_dir"
-    
-    if [ -d "$wezterm_colors_dst" ]; then
-      if ! diff -r "$DOTFILES/wezterm/colors" "$wezterm_colors_dst" >/dev/null 2>&1; then
-        rm -rf "$wezterm_colors_dst"
-        cp -r "$DOTFILES/wezterm/colors" "$wezterm_dir/"
-        success "updated wezterm colors"
-      else
-        success "wezterm colors are already up to date"
-      fi
-    else
-      cp -r "$DOTFILES/wezterm/colors" "$wezterm_dir/"
-      success "copied wezterm colors"
-    fi
-  fi
 }
 
 # Main execution
