@@ -13,19 +13,19 @@ DOTFILES=$(pwd -P)
 
 # Color output functions
 info() {
-	printf "\r  [ \033[00;34m..\033[0m ] $1\n"
+	printf "\r  [ \033[00;34m..\033[0m ] %s\n" "$1"
 }
 
 user() {
-	printf "\r  [ \033[0;33m??\033[0m ] $1\n"
+	printf "\r  [ \033[0;33m??\033[0m ] %s\n" "$1"
 }
 
 success() {
-	printf "\r\033[2K  [ \033[00;32mOK\033[0m ] $1\n"
+	printf "\r\033[2K  [ \033[00;32mOK\033[0m ] %s\n" "$1"
 }
 
 fail() {
-	printf "\r\033[2K  [\033[0;31mFAIL\033[0m] $1\n"
+	printf "\r\033[2K  [\033[0;31mFAIL\033[0m] %s\n" "$1"
 	echo ''
 	exit 1
 }
@@ -102,7 +102,8 @@ link_file() {
 
 	if [ -f "$dst" ] || [ -d "$dst" ] || [ -L "$dst" ]; then
 		# Check if the existing link points to the same source
-		local currentSrc="$(readlink "$dst" 2>/dev/null || echo "")"
+		local currentSrc
+		currentSrc="$(readlink "$dst" 2>/dev/null || echo "")"
 
 		if [ "$currentSrc" == "$src" ]; then
 			success "symlink already exists and points to correct location: $dst"
@@ -112,7 +113,7 @@ link_file() {
 		if [ "$overwrite_all" == "false" ] && [ "$backup_all" == "false" ] && [ "$skip_all" == "false" ]; then
 			user "File already exists: $dst ($(basename "$src")), what do you want to do?
       [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
-			read -n 1 action </dev/tty
+			read -r -n 1 action </dev/tty
 
 			case "$action" in
 			o)
@@ -170,10 +171,10 @@ install_dotfiles() {
 	local overwrite_all=false backup_all=false skip_all=false
 
 	# Find all links.prop files and process them
-	find "$DOTFILES" -maxdepth 2 -name 'links.prop' -not -path '*.git*' | while read linkfile; do
+	find "$DOTFILES" -maxdepth 2 -name 'links.prop' -not -path '*.git*' | while read -r linkfile; do
 		info "Processing $linkfile"
 
-		cat "$linkfile" | while read line; do
+		cat "$linkfile" | while read -r line; do
 			# Skip empty lines and comments
 			if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
 				continue
