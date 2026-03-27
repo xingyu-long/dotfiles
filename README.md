@@ -1,62 +1,63 @@
 # Dotfiles
 
-A comprehensive collection of development environment configurations for macOS, featuring modern tools and optimized workflows.
+A comprehensive collection of development environment configurations for macOS and Linux, featuring modern tools and optimized workflows.
 
-## 🚀 Quick Start
+![CI](https://github.com/xingyu-long/dotfiles/actions/workflows/test.yml/badge.svg)
 
-```shell
+## Quick Start
+
+**Fresh machine — one-liner install:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xingyu-long/dotfiles/main/bootstrap.sh | bash
+```
+
+**Already cloned the repo:**
+
+```bash
 ./install.sh
 ```
 
-That's it! The installation script will handle everything automatically.
+The installation script is **idempotent** — safe to run multiple times.
 
-## 📋 What's Included
+## What's Included
 
-This dotfiles repository provides configurations for:
+| Tool | Description |
+|---|---|
+| **Zsh + Oh My Zsh** | Shell with plugins and `ys` theme |
+| **Neovim** | Modern Vim with LazyVim configuration |
+| **Tmux** | Terminal multiplexer with TPM plugins |
+| **Starship** | Fast, customizable shell prompt |
+| **LazyGit** | Terminal UI for Git |
+| **Alacritty** | GPU-accelerated terminal emulator |
+| **WezTerm** | Cross-platform terminal emulator |
+| **VS Code** | Editor settings and configuration |
 
-- **Neovim** - Modern Vim with LazyVim configuration
-- **Alacritty** - GPU-accelerated terminal emulator
-- **WezTerm** - Cross-platform terminal emulator
-- **Starship** - Fast, customizable shell prompt
-- **Tmux** - Terminal multiplexer with plugins
-- **LazyGit** - Simple terminal UI for Git
-- **VS Code** - Editor settings and configuration
+## Installation Process
 
-## 🛠 Installation Process
+The `install.sh` script performs the following steps in order:
 
-The `install.sh` script is **idempotent** - safe to run multiple times. It will:
+1. **Homebrew** — installs if not present (works on macOS and Linux)
+2. **Packages** — installs everything in `deps/deps-macos.txt` via `brew`
+3. **Symlinks** — creates symbolic links from `links.prop` files in each component folder
+4. **Config files** — copies files that don't use symlinks (lazygit, vscode)
+5. **Oh My Zsh** — installs if not present
+6. **Tmux** — installs TPM and plugins
+7. **Environment** — creates `~/.env.sh` with the `$DOTFILES` path
 
-### 1. Package Installation
-- Installs Homebrew (if not present)
-- Installs all required packages from `deps/deps-macos.txt`:
-  - **Editor**: neovim
-  - **General tools**: fzf, node, ripgrep, tree, wget, tmux, gnupg
-  - **Python tools**: uv
-  - **Git tool**: lazygit
-  - **Zsh plugins**: zsh-autosuggestions, zsh-syntax-highlighting
-
-### 2. Symbolic Link Creation
-- Creates symbolic links based on `links.prop` files in each component folder
-- Handles existing files gracefully with interactive prompts
-- Automatically skips if links already point to correct locations
-
-### 3. Configuration File Copying
-- Copies additional configuration files that don't use symbolic links
-- Only updates files when content has changed
-- Maintains existing configurations when possible
-
-### 4. Environment Setup
-- Creates `~/.env.sh` with DOTFILES path
-- Sets up necessary environment variables
-
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 dotfiles/
+├── bootstrap.sh            # One-liner entry point (clones repo + runs install.sh)
 ├── install.sh              # Main installation script
+├── Dockerfile.test         # Docker image for local testing
 ├── deps/
-│   └── deps-macos.txt      # Package dependencies list
-├── alacritty/              # Terminal emulator config
+│   └── deps-macos.txt      # Homebrew package list
+├── zsh/
+│   ├── .zshrc
+│   └── links.prop
+├── alacritty/
 │   ├── alacritty.toml
 │   ├── dracula.toml
 │   └── links.prop
@@ -65,108 +66,114 @@ dotfiles/
 │   ├── lazyvim.json
 │   ├── links.prop
 │   └── lua/
-├── starship/               # Shell prompt
+├── starship/
 │   ├── starship.toml
 │   └── links.prop
-├── tmux/                   # Terminal multiplexer
+├── tmux/
 │   └── links.prop
-├── lazygit/                # Git UI
+├── lazygit/
 │   └── config.yml
-├── vscode/                 # VS Code settings
+├── vscode/
 │   ├── settings.json
 │   └── vscode_init.vim
-└── wezterm/                # Terminal emulator
+└── wezterm/
     ├── wezterm.lua
     └── colors/
 ```
 
-## 🔧 Configuration Files
+## Symlinks (via `links.prop`)
 
-### Symbolic Links (via `links.prop`)
-Each component folder contains a `links.prop` file that defines symbolic link mappings:
+Each component folder contains a `links.prop` file defining mappings in the form `$DOTFILES/path=$HOME/path`:
 
-- `alacritty/alacritty.toml` → `~/.config/alacritty/alacritty.toml`
-- `lazyvim/` → `~/.config/nvim`
-- `starship/starship.toml` → `~/.config/starship/starship.toml`
-- `tmux/.tmux.conf` → `~/.tmux.conf`
+| Source | Destination |
+|---|---|
+| `zsh/.zshrc` | `~/.zshrc` |
+| `alacritty/alacritty.toml` | `~/.config/alacritty/alacritty.toml` |
+| `lazyvim/` | `~/.config/nvim` |
+| `starship/starship.toml` | `~/.config/starship/starship.toml` |
+| `tmux/.tmux.conf` | `~/.tmux.conf` |
 
-### Direct Copy Files
-Some configurations are copied directly (not symlinked):
+## Testing
 
-- `lazygit/config.yml` → `~/.config/lazygit/config.yml`
-- `vscode/settings.json` → `~/Library/Application Support/Code/User/settings.json`
-- `wezterm/wezterm.lua` → `~/.config/wezterm/wezterm.lua`
-- `wezterm/colors/` → `~/.config/wezterm/colors/`
+### Local (Docker)
 
-## 🎯 Features
+```bash
+# Full install smoke test
+docker build -f Dockerfile.test -t dotfiles-test .
 
-- **Idempotent Installation**: Run the script multiple times safely
-- **Smart Updates**: Only updates files when content changes
-- **Interactive Conflict Resolution**: Handles existing files gracefully
-- **Comprehensive Package Management**: Installs all dependencies automatically
-- **Cross-Component Integration**: All tools work together seamlessly
+# Verify installation
+docker run --rm dotfiles-test zsh -c "
+  eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" &&
+  brew --version && echo 'brew: OK' &&
+  [ -d \$HOME/.oh-my-zsh ] && echo 'oh-my-zsh: OK' &&
+  [ -L \$HOME/.zshrc ] && echo '.zshrc symlink: OK' &&
+  [ -d \$HOME/.tmux/plugins/tpm ] && echo 'tpm: OK'
+"
 
-## 🔄 Updating
+# Interactive shell inside the container
+docker run --rm -it dotfiles-test zsh
+```
 
-To update your dotfiles:
+### Linting
 
-1. Pull the latest changes:
-   ```shell
-   git pull origin main
-   ```
+Install tools:
+```bash
+brew install shellcheck shfmt
+```
 
-2. Run the installation script again:
-   ```shell
-   ./install.sh
-   ```
+Run checks:
+```bash
+shellcheck install.sh bootstrap.sh   # static analysis
+shfmt -d .                           # check formatting
+shfmt -w .                           # auto-fix formatting
+```
 
-The script will only update what's changed, making updates fast and safe.
+### CI Pipeline
 
-## 🐛 Troubleshooting
+Every push and pull request to `main` runs three jobs:
 
-### Common Issues
+```
+shellcheck ─┐
+            ├──► test-linux (Docker)
+shfmt      ─┘
+```
 
-**Q: nvim-treesitter error when using nvim?**
-- A: Run `:TSInstall lua` to reinstall the parser.
+| Job | What it does |
+|---|---|
+| `shellcheck` | Static analysis on all `.sh` files |
+| `shfmt` | Format check on all `.sh` files |
+| `test-linux` | Full install inside Docker, verifies brew / oh-my-zsh / symlinks / TPM |
 
-**Q: Tmux plugins not working?**
-- A: Install plugins by pressing `Ctrl+A, Shift+I` in a tmux session.
+## Customization
 
-**Q: Shell prompt not showing correctly?**
-- A: Restart your terminal or run `source ~/.zshrc`.
-
-**Q: Homebrew not found after installation?**
-- A: Restart your terminal or run `eval "$(/opt/homebrew/bin/brew shellenv)"`.
-
-### Manual Steps After Installation
-
-1. **Restart your terminal** or run `source ~/.zshrc`
-2. **Initialize Neovim**: Run `nvim` to set up LazyVim
-3. **Install Tmux plugins**: Press `Ctrl+A, Shift+I` in tmux
-4. **Configure Git**: Set up your Git user name and email
-
-## 🎨 Customization
-
-### Adding New Packages
-Edit `deps/deps-macos.txt` to add or remove packages:
+**Add a package:** edit `deps/deps-macos.txt`
 
 ```txt
-# Add your package here
+# one package per line
 your-package-name
 ```
 
-### Adding New Components
-1. Create a new folder with your configuration files
-2. Add a `links.prop` file if using symbolic links
-3. Update `install.sh` if you need custom copying logic
+**Add a new component:**
+1. Create a folder with your config files
+2. Add a `links.prop` file for any symlinks
+3. Add any custom copy logic to `install.sh` if needed
 
-### Modifying Existing Configurations
-- Edit files directly in their respective folders
-- Run `./install.sh` to apply changes
-- The script will detect changes and update accordingly
+## Troubleshooting
 
-## 📝 Requirements
+**nvim-treesitter error?**
+Run `:TSInstall lua` to reinstall the parser.
 
-- **macOS** (currently supported platform)
-- **Internet connection** (for package downloads)
-- **Git** (for cloning the repository)
+**Tmux plugins not loading?**
+Press `Ctrl+A, Shift+I` inside a tmux session to reinstall.
+
+**Shell prompt not showing correctly?**
+Run `source ~/.zshrc` or restart your terminal.
+
+**Homebrew not found after install?**
+Run `eval "$(/opt/homebrew/bin/brew shellenv)"` (macOS) or `eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"` (Linux).
+
+## Requirements
+
+- macOS or Linux
+- `git` (for cloning)
+- Internet connection
