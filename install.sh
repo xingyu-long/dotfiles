@@ -174,7 +174,7 @@ install_dotfiles() {
 	find "$DOTFILES" -maxdepth 2 -name 'links.prop' -not -path '*.git*' | while read -r linkfile; do
 		info "Processing $linkfile"
 
-		cat "$linkfile" | while read -r line; do
+		while read -r line; do
 			# Skip empty lines and comments
 			if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
 				continue
@@ -188,7 +188,32 @@ install_dotfiles() {
 			# Create destination directory if it doesn't exist
 			mkdir -p "$dir"
 			link_file "$src" "$dst"
-		done
+		done <"$linkfile"
+	done
+}
+
+# Function to link Homebrew-installed zsh plugins into Oh My Zsh custom plugins dir
+setup_zsh_plugins() {
+	local zsh_custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+	local brew_prefix
+	brew_prefix="$(brew --prefix)"
+
+	for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
+		local plugin_src="$brew_prefix/share/$plugin"
+		local plugin_dst="$zsh_custom/plugins/$plugin"
+
+		if [ ! -d "$plugin_src" ]; then
+			info "$plugin not found at $plugin_src, skipping"
+			continue
+		fi
+
+		if [ -L "$plugin_dst" ]; then
+			success "$plugin already linked"
+		else
+			mkdir -p "$zsh_custom/plugins"
+			ln -s "$plugin_src" "$plugin_dst"
+			success "linked $plugin to Oh My Zsh custom plugins"
+		fi
 	done
 }
 
@@ -304,12 +329,23 @@ main() {
 	local symlinks_created=false
 	local files_copied=false
 	local ohmyzsh_setup=false
+	local zsh_plugins_setup=false
 	local tmux_setup=false
 	local env_created=false
 
 	# Install packages
 	install_packages
 	packages_installed=true
+	echo ""
+
+	# Install Oh My Zsh before symlinking .zshrc so the config is valid on first load
+	setup_ohmyzsh
+	ohmyzsh_setup=true
+	echo ""
+
+	# Link Homebrew zsh plugins into Oh My Zsh custom plugins dir
+	setup_zsh_plugins
+	zsh_plugins_setup=true
 	echo ""
 
 	# Install dotfiles (create symbolic links)
@@ -320,11 +356,6 @@ main() {
 	# Copy additional files
 	copy_additional_files
 	files_copied=true
-	echo ""
-
-	# Install Oh My Zsh
-	setup_ohmyzsh
-	ohmyzsh_setup=true
 	echo ""
 
 	# Set up tmux (TPM + plugins)
@@ -344,6 +375,7 @@ main() {
 	echo "  ✓ Symbolic links: $([ "$symlinks_created" = true ] && echo "created/verified" || echo "skipped")"
 	echo "  ✓ Configuration files: $([ "$files_copied" = true ] && echo "copied/updated" || echo "skipped")"
 	echo "  ✓ Oh My Zsh: $([ "$ohmyzsh_setup" = true ] && echo "completed" || echo "skipped")"
+	echo "  ✓ Zsh plugins: $([ "$zsh_plugins_setup" = true ] && echo "completed" || echo "skipped")"
 	echo "  ✓ Tmux setup: $([ "$tmux_setup" = true ] && echo "completed" || echo "skipped")"
 	echo "  ✓ Environment setup: $([ "$env_created" = true ] && echo "completed" || echo "skipped")"
 	echo ""
