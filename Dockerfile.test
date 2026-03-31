@@ -22,4 +22,4 @@ WORKDIR /home/dotfiles
 
 COPY --chown=dotfiles:dotfiles . /home/dotfiles/dotfiles
 
-RUN cd /home/dotfiles/dotfiles && bash install.sh
+RUN cd /home/dotfiles/dotfiles && DOTFILES_OVERWRITE_ALL=true bash install.sh

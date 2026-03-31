@@ -91,6 +91,11 @@ install_packages() {
 	info "Package installation summary: $installed_count installed, $skipped_count already present"
 }
 
+# Global variables for link handling (can be overridden by env vars)
+OVERWRITE_ALL=${DOTFILES_OVERWRITE_ALL:-false}
+BACKUP_ALL=${DOTFILES_BACKUP_ALL:-false}
+SKIP_ALL=${DOTFILES_SKIP_ALL:-false}
+
 # Function to create symbolic links based on links.prop files
 link_file() {
 	local src=$1 dst=$2
@@ -110,37 +115,43 @@ link_file() {
 			return 0
 		fi
 
-		if [ "$overwrite_all" == "false" ] && [ "$backup_all" == "false" ] && [ "$skip_all" == "false" ]; then
-			user "File already exists: $dst ($(basename "$src")), what do you want to do?
-      [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
-			read -r -n 1 action </dev/tty
-
-			case "$action" in
-			o)
-				overwrite=true
-				;;
-			O)
-				overwrite_all=true
-				;;
-			b)
-				backup=true
-				;;
-			B)
-				backup_all=true
-				;;
-			s)
+		if [ "$OVERWRITE_ALL" == "false" ] && [ "$BACKUP_ALL" == "false" ] && [ "$SKIP_ALL" == "false" ]; then
+			# Check if we are in a non-interactive shell (no TTY)
+			if [ ! -t 0 ] || [ ! -e /dev/tty ]; then
+				info "Non-interactive environment detected, skipping conflict for $dst"
 				skip=true
-				;;
-			S)
-				skip_all=true
-				;;
-			*) ;;
-			esac
+			else
+				user "File already exists: $dst ($(basename "$src")), what do you want to do?
+      [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
+				read -r -n 1 action </dev/tty
+
+				case "$action" in
+				o)
+					overwrite=true
+					;;
+				O)
+					OVERWRITE_ALL=true
+					;;
+				b)
+					backup=true
+					;;
+				B)
+					BACKUP_ALL=true
+					;;
+				s)
+					skip=true
+					;;
+				S)
+					SKIP_ALL=true
+					;;
+				*) ;;
+				esac
+			fi
 		fi
 
-		overwrite=${overwrite:-$overwrite_all}
-		backup=${backup:-$backup_all}
-		skip=${skip:-$skip_all}
+		overwrite=${overwrite:-$OVERWRITE_ALL}
+		backup=${backup:-$BACKUP_ALL}
+		skip=${skip:-$SKIP_ALL}
 
 		if [ "$overwrite" == "true" ]; then
 			rm -rf "$dst"
@@ -168,10 +179,9 @@ link_file() {
 install_dotfiles() {
 	info "Installing dotfiles by creating symbolic links..."
 
-	local overwrite_all=false backup_all=false skip_all=false
-
 	# Find all links.prop files and process them
-	find "$DOTFILES" -maxdepth 2 -name 'links.prop' -not -path '*.git*' | while read -r linkfile; do
+	# Use process substitution instead of pipe to avoid subshell issues with global variables
+	while read -r linkfile; do
 		info "Processing $linkfile"
 
 		while read -r line; do
@@ -189,7 +199,7 @@ install_dotfiles() {
 			mkdir -p "$dir"
 			link_file "$src" "$dst"
 		done <"$linkfile"
-	done
+	done < <(find "$DOTFILES" -maxdepth 2 -name 'links.prop' -not -path '*.git*')
 }
 
 # Function to link Homebrew-installed zsh plugins into Oh My Zsh custom plugins dir
