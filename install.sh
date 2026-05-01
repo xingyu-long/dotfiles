@@ -217,8 +217,12 @@ setup_zsh_plugins() {
 			continue
 		fi
 
-		if [ -L "$plugin_dst" ]; then
+		if [ -L "$plugin_dst" ] && [ "$(readlink "$plugin_dst")" = "$plugin_src" ]; then
 			success "$plugin already linked"
+		elif [ -L "$plugin_dst" ] || [ -d "$plugin_dst" ]; then
+			rm -rf "$plugin_dst"
+			ln -s "$plugin_src" "$plugin_dst"
+			success "replaced $plugin with correct symlink"
 		else
 			mkdir -p "$zsh_custom/plugins"
 			ln -s "$plugin_src" "$plugin_dst"
