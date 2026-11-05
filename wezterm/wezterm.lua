@@ -7,7 +7,7 @@ config.color_scheme = "Dracula (Official)"
 config.font_size = 20.0
 config.font = wezterm.font("JetBrainsMono Nerd Font")
 
-config.window_decorations = "RESIZE"
+-- config.window_decorations = "RESIZE"
 -- config.use_resize_increments = true
 config.window_padding = {
   left = 0,
