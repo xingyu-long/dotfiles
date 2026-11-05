@@ -40,7 +40,11 @@ jobs:
           docker run --rm dotfiles-test zsh -c "
             eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" &&
             brew --version && echo 'brew: OK' &&
-            [ -d \$HOME/.oh-my-zsh ] && echo 'oh-my-zsh: OK' &&
+            brew list sheldon >/dev/null && echo 'sheldon: OK' &&
+            command -v starship >/dev/null && echo 'starship: OK' &&
+            command -v delta >/dev/null && echo 'delta: OK' &&
             [ -L \$HOME/.zshrc ] && echo '.zshrc symlink: OK' &&
+            [ -L \$HOME/.config/lazygit/config.yml ] && echo 'lazygit config link: OK' &&
+            [ -z \"\$(zsh -i -c exit 2>&1)\" ] && echo 'zsh starts without errors: OK' &&
             [ -d \$HOME/.tmux/plugins/tpm ] && echo 'tpm: OK'
           "
