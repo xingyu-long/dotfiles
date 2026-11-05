@@ -18,13 +18,20 @@ curl -fsSL https://raw.githubusercontent.com/xingyu-long/dotfiles/main/bootstrap
 ./install.sh
 ```
 
-The installation script is **idempotent** — safe to run multiple times.
+The installation script is **idempotent** — safe to run multiple times. You can also run just one part:
+
+```bash
+./install.sh packages   # Homebrew + Brewfile
+./install.sh links      # symlinks only
+./install.sh plugins    # sheldon + tmux plugins
+./install.sh --help
+```
 
 ## What's Included
 
 | Tool | Description |
 |---|---|
-| **Zsh + Oh My Zsh** | Shell with plugins and `ys` theme |
+| **Zsh + sheldon** | Shell with plugins (autosuggestions, syntax highlighting); per-machine overrides in `~/.zshrc.local` |
 | **Neovim** | Modern Vim with LazyVim configuration |
 | **Tmux** | Terminal multiplexer with TPM plugins |
 | **Starship** | Fast, customizable shell prompt |
@@ -35,15 +42,15 @@ The installation script is **idempotent** — safe to run multiple times.
 
 ## Installation Process
 
-The `install.sh` script performs the following steps in order:
+`install.sh` runs three steps, in order:
 
-1. **Homebrew** — installs if not present (works on macOS and Linux)
-2. **Packages** — installs everything in `deps/deps-macos.txt` via `brew`
-3. **Symlinks** — creates symbolic links from `links.prop` files in each component folder
-4. **Config files** — copies files that don't use symlinks (lazygit, vscode)
-5. **Oh My Zsh** — installs if not present
-6. **Tmux** — installs TPM and plugins
-7. **Environment** — creates `~/.env.sh` with the `$DOTFILES` path
+1. **packages** — installs Homebrew if needed, then everything in the `Brewfile` with `brew bundle` (missing packages only; nothing is upgraded). Casks, such as the Nerd Font, Alacritty, WezTerm and VS Code, are installed on macOS only.
+2. **links** — creates symlinks from every `links.prop` (all OSes) and `links.<os>.prop` (`darwin` or `linux`) in the component folders.
+3. **plugins** — downloads the sheldon plugins and installs TPM and the tmux plugins.
+
+A failing step doesn't abort the others; all failures are listed at the end and the exit status is non-zero.
+
+**When a destination file already exists**, the script asks what to do (backup / overwrite / skip, capital letter = all). With no terminal (CI, `curl | bash`) it backs the file up to `<file>.backup.<timestamp>` instead of skipping it. Override with `DOTFILES_ON_CONFLICT=backup|overwrite|skip`.
 
 ## Repository Structure
 
@@ -52,8 +59,7 @@ dotfiles/
 ├── bootstrap.sh            # One-liner entry point (clones repo + runs install.sh)
 ├── install.sh              # Main installation script
 ├── Dockerfile.test         # Docker image for local testing
-├── deps/
-│   └── deps-macos.txt      # Homebrew package list
+├── Brewfile                # Homebrew packages, casks and fonts
 ├── zsh/
 │   ├── .zshrc
 │   └── links.prop
@@ -66,16 +72,23 @@ dotfiles/
 │   ├── lazyvim.json
 │   ├── links.prop
 │   └── lua/
+├── sheldon/
+│   ├── plugins.toml
+│   └── links.prop
 ├── starship/
 │   ├── starship.toml
 │   └── links.prop
 ├── tmux/
 │   └── links.prop
 ├── lazygit/
-│   └── config.yml
+│   ├── config.yml
+│   ├── links.darwin.prop   # macOS reads ~/Library/Application Support/lazygit
+│   └── links.linux.prop    # Linux reads ~/.config/lazygit
 ├── vscode/
 │   ├── settings.json
-│   └── vscode_init.vim
+│   ├── vscode_init.vim
+│   ├── links.darwin.prop
+│   └── links.linux.prop
 └── wezterm/
     ├── wezterm.lua
     └── colors/
@@ -83,15 +96,28 @@ dotfiles/
 
 ## Symlinks (via `links.prop`)
 
-Each component folder contains a `links.prop` file defining mappings in the form `$DOTFILES/path=$HOME/path`:
+Each component folder contains a `links.prop` file defining mappings in the form `$DOTFILES/path=$HOME/path`. Only `$DOTFILES` and `$HOME` are expanded, and paths may contain spaces. Use `links.darwin.prop` or `links.linux.prop` for entries that only apply to one OS.
 
 | Source | Destination |
 |---|---|
 | `zsh/.zshrc` | `~/.zshrc` |
+| `sheldon/plugins.toml` | `~/.config/sheldon/plugins.toml` |
 | `alacritty/alacritty.toml` | `~/.config/alacritty/alacritty.toml` |
 | `lazyvim/` | `~/.config/nvim` |
 | `starship/starship.toml` | `~/.config/starship/starship.toml` |
 | `tmux/.tmux.conf` | `~/.tmux.conf` |
+| `lazygit/config.yml` | macOS: `~/Library/Application Support/lazygit/config.yml`, Linux: `~/.config/lazygit/config.yml` |
+| `vscode/settings.json` | macOS: `~/Library/Application Support/Code/User/settings.json`, Linux: `~/.config/Code/User/settings.json` |
+
+## Machine-specific settings
+
+`~/.zshrc` is a symlink to the shared `zsh/.zshrc`, so avoid editing it per machine. Instead, create `~/.zshrc.local`; it is sourced last, is never tracked or overwritten by `install.sh`, and can override anything. Use it for work-only paths, env vars and secrets:
+
+```zsh
+# ~/.zshrc.local
+export PATH="$HOME/work/bin:$PATH"
+alias k="kubectl"
+```
 
 ## Testing
 
@@ -105,8 +131,12 @@ docker build -f Dockerfile.test -t dotfiles-test .
 docker run --rm dotfiles-test zsh -c "
   eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" &&
   brew --version && echo 'brew: OK' &&
-  [ -d \$HOME/.oh-my-zsh ] && echo 'oh-my-zsh: OK' &&
+  brew list sheldon >/dev/null && echo 'sheldon: OK' &&
+  command -v starship >/dev/null && echo 'starship: OK' &&
+  command -v delta >/dev/null && echo 'delta: OK' &&
   [ -L \$HOME/.zshrc ] && echo '.zshrc symlink: OK' &&
+  [ -L \$HOME/.config/lazygit/config.yml ] && echo 'lazygit config link: OK' &&
+  [ -z \"\$(zsh -i -c exit 2>&1)\" ] && echo 'zsh starts without errors: OK' &&
   [ -d \$HOME/.tmux/plugins/tpm ] && echo 'tpm: OK'
 "
 
@@ -142,21 +172,22 @@ shfmt      ─┘
 |---|---|
 | `shellcheck` | Static analysis on all `.sh` files |
 | `shfmt` | Format check on all `.sh` files |
-| `test-linux` | Full install inside Docker, verifies brew / oh-my-zsh / symlinks / TPM |
+| `test-linux` | Full install inside Docker, verifies brew / sheldon / starship / symlinks / TPM |
 
 ## Customization
 
-**Add a package:** edit `deps/deps-macos.txt`
+**Add a package:** edit the `Brewfile`
 
-```txt
-# one package per line
-your-package-name
+```ruby
+brew "your-package-name"
+cask "your-app"            # macOS only: put inside `if OS.mac?`
 ```
+
+Check it with `brew bundle check --file=Brewfile`.
 
 **Add a new component:**
 1. Create a folder with your config files
-2. Add a `links.prop` file for any symlinks
-3. Add any custom copy logic to `install.sh` if needed
+2. Add a `links.prop` file (or `links.darwin.prop` / `links.linux.prop`) for the symlinks
 
 ## Troubleshooting
 
