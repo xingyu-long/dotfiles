@@ -1,0 +1,12 @@
+# sheldon plugin list - https://sheldon.cli.rs
+# Edit, then open a new shell to pick up the changes.
+# Order matters: syntax highlighting should be loaded last.
+shell = "zsh"
+
+# Fish-like suggestions from history
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+
+# Must be last
+[plugins.zsh-syntax-highlighting]
+github = "zsh-users/zsh-syntax-highlighting"
