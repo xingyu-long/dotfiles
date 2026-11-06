@@ -4,15 +4,17 @@
 scan_timeout = 30
 command_timeout = 500
 
-# Layout:  host ~/path branch [status]  v3.12(venv) 5s ✦1            14:13
+# Layout:  # [user @ ]host in ~/path on git:branch o [12:00:00]     (o = clean; dirty shows [$!7?2])
 #          ❯
-# Language versions only appear inside a matching project; the time sits on
-# the right edge.
+# Extra segments (venv, language versions, slow-command time, jobs) only appear
+# when relevant, just before the time.
 format = """
+[#](blue) \
 $username\
 $hostname\
 $directory\
 $git_branch\
+${custom.git_clean}\
 $git_status\
 $python\
 $nodejs\
@@ -20,16 +22,17 @@ $rust\
 $golang\
 $cmd_duration\
 $jobs\
+$time\
 $line_break\
 $character\
 """
-right_format = '$time'
 
-# User: only shown over SSH or as root (then rendered as user@host)
+# User: only shown over SSH, as root, or when different from the login user
+# (rendered as "user @ host"); hidden on a local login, like on the laptop
 [username]
 style_user = 'bold cyan'
 style_root = 'bold red'
-format = '[$user]($style)[@](dimmed white)'
+format = '[$user]($style)[ @ ](dimmed white)'
 
 # Hostname
 [hostname]
@@ -37,27 +40,38 @@ ssh_only = false
 style = 'green'
 format = '[$hostname]($style) '
 
-# Directory: always the full path
+# Directory: always the full path ("in ~/path")
 [directory]
 style = 'bold yellow'
 home_symbol = '~'
 truncation_length = 0
 truncate_to_repo = false
 read_only = ' 🔒'
-format = '[$path]($style)[$read_only]($read_only_style) '
+format = 'in [$path]($style)[$read_only]($read_only_style) '
 
-# Git branch
+# Git branch: "on <icon> main". Other icons: U+E0A0 (powerline), U+E725 (git-branch), U+F126 (fork),
+# or no Nerd Font: 'git:' / '⎇ '. Edit the codepoint below, e.g. symbol = "\uE0A0 ".
 [git_branch]
-symbol = ''
+symbol = ' '
 style = 'bold cyan'
 truncation_length = 32
 truncation_symbol = '…'
-format = '[$symbol$branch]($style)'
+format = 'on [$symbol$branch]($style) '
+
+# Clean marker: "o" when the work tree has no changes. Starship has no built-in
+# for this, so it runs `git status` once per prompt (+8ms small repo, +25ms big
+# one). Delete this block and the ${custom.git_clean} line above to drop it.
+[custom.git_clean]
+when = 'git rev-parse --is-inside-work-tree >/dev/null 2>&1 && [ -z "$(git status --porcelain 2>/dev/null)" ]'
+symbol = 'o'
+style = 'bold green'
+format = '[$symbol]($style) '
+shell = ['sh']
 
 # Git status:  $ stash  !N modified  +N staged  ?N untracked  ⇡⇣ ahead/behind
 [git_status]
 style = 'bold red'
-format = '( [\[$all_status$ahead_behind\]]($style)) '
+format = '([\[$all_status$ahead_behind\]]($style) )'
 conflicted = '='
 ahead = '⇡${count}'
 behind = '⇣${count}'
@@ -105,12 +119,12 @@ style = 'bold blue'
 number_threshold = 1
 format = '[$symbol$number]($style) '
 
-# Time (right side)
+# Time, at the end of the first line
 [time]
 disabled = false
 style = 'dimmed white'
-time_format = '%H:%M'
-format = '[$time]($style)'
+time_format = '%T'
+format = '[\[$time\]]($style)'
 
 # Character: green when the last command succeeded, red when it failed
 [character]
