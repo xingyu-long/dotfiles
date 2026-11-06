@@ -18,14 +18,27 @@ curl -fsSL https://raw.githubusercontent.com/xingyu-long/dotfiles/main/bootstrap
 ./install.sh
 ```
 
-The installation script is **idempotent** — safe to run multiple times. You can also run just one part:
+The installation script is **idempotent** — safe to run multiple times. By default it prints one summary line per step:
 
-```bash
-./install.sh packages   # Homebrew + Brewfile
-./install.sh links      # symlinks only
-./install.sh plugins    # sheldon + tmux plugins
-./install.sh --help
 ```
+dotfiles · darwin · ~/dotfiles
+
+[1/3] packages  ✓ 17 present, nothing to install                             2s
+[2/3] links     ✓ 9 up to date                                               <1s
+[3/3] plugins   ✓ 2 sheldon, 6 tmux plugins                                  <1s
+
+Done in 2s. Open a new terminal, or run: source ~/.zshrc
+```
+
+| Command | What it does |
+|---|---|
+| `./install.sh` | run every step (quiet summary) |
+| `./install.sh -v` | also show every detail and the tools' own output |
+| `./install.sh -n` | **dry run**: show what would be installed, linked or backed up, and change nothing |
+| `./install.sh links` | run one step: `packages`, `links` or `plugins` (they can be combined, e.g. `-n links plugins`) |
+| `./install.sh --help` | usage |
+
+If a step fails, its last log lines are printed under it, the other steps still run, and the exit status is non-zero. `NO_COLOR=1` turns colors off; output is plain when it isn't a terminal.
 
 ## What's Included
 

@@ -27,7 +27,6 @@ brew "wget"
 # macOS apps and fonts (casks do not exist on Linux)
 if OS.mac?
   cask "font-jetbrains-mono-nerd-font"
-  cask "alacritty"
   cask "wezterm"
-  cask "visual-studio-code"
+  brew "mole"
 end
