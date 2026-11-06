@@ -2,46 +2,98 @@
 #
 # install.sh - set up this machine from the dotfiles repo.
 #
-#   ./install.sh              run every step
-#   ./install.sh packages     Homebrew + Brewfile only
-#   ./install.sh links        symlinks only
-#   ./install.sh plugins      sheldon + tmux plugins only
+#   ./install.sh                  run every step, one summary line per step
+#   ./install.sh -v               also show every detail and the tools' own output
+#   ./install.sh -n               dry run: show what would change, change nothing
+#   ./install.sh links            run one step (packages | links | plugins)
+#   ./install.sh -n links plugins steps and flags can be combined
 #
-# Steps can be combined: ./install.sh links plugins
-# The script is idempotent - safe to run as often as you like.
+# Steps:
+#   packages   Homebrew + everything in the Brewfile (missing packages only)
+#   links      symlinks from */links.prop and */links.<darwin|linux>.prop
+#   plugins    sheldon plugins, TPM and the tmux plugins
 #
-# What it reads:
-#   Brewfile                 packages (brew bundle)
-#   */links.prop             symlinks, one "src=dst" per line (all OSes)
-#   */links.<os>.prop        symlinks for one OS only (darwin | linux)
-#
-# When a destination already exists (DOTFILES_ON_CONFLICT=backup|overwrite|skip):
+# When a link destination already exists (DOTFILES_ON_CONFLICT=backup|overwrite|skip):
 #   - interactive terminal: asks
 #   - no terminal (CI, curl | bash): backs it up, never silently skips
 #
-# Exit status is non-zero if any step failed, but one failure no longer aborts
-# the others; they are all reported at the end.
+# The script is idempotent. A failing step does not abort the others; every
+# failure is listed at the end and the exit status is non-zero. Output goes to
+# a log per step (kept only when something fails). NO_COLOR disables colors.
 
 set -u
 
 cd "$(dirname "$0")" || exit 1
 DOTFILES=$(pwd -P)
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+VERBOSE=false
+DRY_RUN=false
 FAILURES=()
+LOG_DIR=
+STEP_NAME=
+STEP_LOG=/dev/null
+SUMMARY=
+N_FAILED=0
+LAST_FAIL=
+
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+	TTY=true
+	RED=$'\033[31m'
+	GREEN=$'\033[32m'
+	YELLOW=$'\033[33m'
+	DIM=$'\033[2m'
+	RESET=$'\033[0m'
+else
+	TTY=false
+	RED=
+	GREEN=
+	YELLOW=
+	DIM=
+	RESET=
+fi
 
 # ---------------------------------------------------------------------------
 # Output helpers
 # ---------------------------------------------------------------------------
-info() { printf "\r  [ \033[00;34m..\033[0m ] %s\n" "$1"; }
-user() { printf "\r  [ \033[0;33m??\033[0m ] %s\n" "$1" >&2; }
-success() { printf "\r\033[2K  [ \033[00;32mOK\033[0m ] %s\n" "$1"; }
-fail() {
-	printf "\r\033[2K  [\033[0;31mFAIL\033[0m] %s\n" "$1"
-	FAILURES+=("$1")
+# say: a detail line. Shown with -v, otherwise only written to the step log.
+say() {
+	if $VERBOSE; then
+		printf '  %s\n' "$1"
+	else
+		printf '%s\n' "$1" >>"$STEP_LOG"
+	fi
+}
+
+# run: run a command; its output is shown with -v, otherwise logged.
+run() {
+	if $VERBOSE; then
+		"$@"
+	else
+		"$@" >>"$STEP_LOG" 2>&1
+	fi
+}
+
+# bad: record a failure for the current step.
+bad() {
+	N_FAILED=$((N_FAILED + 1))
+	LAST_FAIL=$1
+	FAILURES+=("$STEP_NAME: $1")
+	say "${RED}FAIL${RESET} $1"
+}
+
+# join_parts "a" "" "b" -> "a, b" (empty parts are skipped)
+join_parts() {
+	local out="" part
+	for part in "$@"; do
+		[[ -n "$part" ]] || continue
+		out="${out:+$out, }$part"
+	done
+	printf '%s' "$out"
 }
 
 # ---------------------------------------------------------------------------
-# Homebrew + packages
+# Step: packages
 # ---------------------------------------------------------------------------
 brew_shellenv() {
 	local brew_path
@@ -54,34 +106,46 @@ brew_shellenv() {
 	return 1
 }
 
-ensure_brew() {
-	command -v brew &>/dev/null && return 0
-	brew_shellenv && return 0
-	info "Homebrew not found. Installing Homebrew..."
-	NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || return 1
-	brew_shellenv
-}
-
-install_packages() {
-	info "Installing packages from Brewfile..."
-	if ! ensure_brew; then
-		fail "Homebrew is not available"
-		return
+step_packages() {
+	if ! command -v brew &>/dev/null && ! brew_shellenv; then
+		if $DRY_RUN; then
+			SUMMARY="would install Homebrew and every Brewfile package"
+			return
+		fi
+		say "Installing Homebrew..."
+		if ! run env NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || ! brew_shellenv; then
+			bad "could not install Homebrew"
+			SUMMARY="Homebrew install failed"
+			return
+		fi
 	fi
-	# --no-upgrade: only install what is missing, like a re-run should
-	if brew bundle --no-upgrade --file="$DOTFILES/Brewfile"; then
-		success "Brewfile satisfied"
+
+	local brewfile="$DOTFILES/Brewfile" total missing names
+	total=$(($(brew bundle list --file="$brewfile" --formula | wc -l) + $(brew bundle list --file="$brewfile" --cask | wc -l)))
+	# --no-upgrade: outdated packages count as installed
+	names=$(brew bundle check --no-upgrade --verbose --file="$brewfile" 2>&1 | sed -n -E 's/.*(Formula|Cask) ([^ ]+) needs to be installed.*/\2/p' | tr '\n' ' ')
+	missing=$(wc -w <<<"$names" | tr -d ' ')
+
+	if [[ "$missing" -eq 0 ]]; then
+		say "Brewfile already satisfied ($total entries)"
+		SUMMARY="$total present, nothing to install"
+	elif $DRY_RUN; then
+		say "would install: $names"
+		SUMMARY="$((total - missing)) present, would install $missing: ${names% }"
+	elif run brew bundle --no-upgrade --file="$brewfile"; then
+		SUMMARY="$((total - missing)) present, $missing installed: ${names% }"
 	else
-		fail "brew bundle reported errors (see output above)"
+		bad "brew bundle reported errors"
+		SUMMARY="brew bundle failed"
 	fi
 }
 
 # ---------------------------------------------------------------------------
-# Symlinks
+# Step: links
 # ---------------------------------------------------------------------------
-# CONFLICT_POLICY: ask | backup | overwrite | skip
 can_prompt() { { : </dev/tty; } 2>/dev/null; }
 
+# CONFLICT_POLICY: ask | backup | overwrite | skip
 CONFLICT_POLICY=${DOTFILES_ON_CONFLICT:-}
 if [[ -z "$CONFLICT_POLICY" ]]; then
 	# legacy switches, kept for the Dockerfile and old habits
@@ -98,13 +162,14 @@ if [[ -z "$CONFLICT_POLICY" ]]; then
 	fi
 fi
 
-# Sets CHOICE to backup | overwrite | skip for the given destination.
+# Sets CHOICE to backup | overwrite | skip | ask for the given destination.
 resolve_conflict() {
 	local dst=$1 answer
 	CHOICE=$CONFLICT_POLICY
 	[[ "$CONFLICT_POLICY" == ask ]] || return 0
+	$DRY_RUN && return 0 # never prompt in a dry run
 
-	user "$dst already exists. [b]ackup, [o]verwrite, [s]kip (capital letter = apply to all)?"
+	printf '\r\033[2K  %s?%s %s already exists. [b]ackup, [o]verwrite, [s]kip (capital letter = apply to all)? ' "$YELLOW" "$RESET" "$dst" >&2
 	read -r -n 1 answer </dev/tty
 	echo >&2
 	case "$answer" in
@@ -117,52 +182,77 @@ resolve_conflict() {
 	esac
 }
 
+L_OK=0 L_LINKED=0 L_BACKUP=0 L_OVERWRITE=0 L_SKIP=0 L_ASK=0
+
 link_file() {
-	local src=$1 dst=$2
+	local src=$1 dst=$2 backup
 
 	if [[ ! -e "$src" ]]; then
-		fail "link source missing: $src"
+		bad "link source missing: $src"
 		return
 	fi
 
 	if [[ -L "$dst" && "$(readlink "$dst")" == "$src" ]]; then
-		success "already linked: $dst"
+		say "already linked: $dst"
+		L_OK=$((L_OK + 1))
 		return
 	fi
 
 	if [[ -e "$dst" || -L "$dst" ]]; then
 		resolve_conflict "$dst"
 		case "$CHOICE" in
+		ask)
+			say "$dst exists: would ask what to do"
+			L_ASK=$((L_ASK + 1))
+			return
+			;;
 		overwrite)
-			rm -rf "$dst"
-			info "removed $dst"
+			if $DRY_RUN; then
+				say "would overwrite: $dst"
+			else
+				rm -rf "$dst"
+				say "overwrote $dst"
+			fi
+			L_OVERWRITE=$((L_OVERWRITE + 1))
 			;;
 		backup)
-			local backup
 			backup="$dst.backup.$(date +%Y%m%d-%H%M%S)"
-			mv "$dst" "$backup"
-			info "moved $dst to $backup"
+			if $DRY_RUN; then
+				say "would back up $dst to $backup"
+			else
+				mv "$dst" "$backup"
+				say "backed up $dst to $backup"
+			fi
+			L_BACKUP=$((L_BACKUP + 1))
 			;;
 		*)
-			info "skipped $dst"
+			say "skipped $dst"
+			L_SKIP=$((L_SKIP + 1))
 			return
 			;;
 		esac
 	fi
 
+	if $DRY_RUN; then
+		say "would link $dst -> $src"
+		L_LINKED=$((L_LINKED + 1))
+		return
+	fi
 	mkdir -p "$(dirname "$dst")"
 	if ln -s "$src" "$dst"; then
-		success "linked $dst -> $src"
+		say "linked $dst -> $src"
+		L_LINKED=$((L_LINKED + 1))
 	else
-		fail "could not link $dst"
+		bad "could not link $dst"
 	fi
 }
 
-install_links() {
-	info "Linking dotfiles..."
+step_links() {
 	local linkfile line src dst
+	L_OK=0 L_LINKED=0 L_BACKUP=0 L_OVERWRITE=0 L_SKIP=0 L_ASK=0
+
 	while IFS= read -r linkfile; do
-		info "Processing ${linkfile#"$DOTFILES"/}"
+		say "${DIM}${linkfile#"$DOTFILES"/}${RESET}"
 		while IFS= read -r line || [[ -n "$line" ]]; do
 			[[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
 			src=${line%%=*}
@@ -175,106 +265,186 @@ install_links() {
 			link_file "$src" "$dst"
 		done <"$linkfile"
 	done < <(find "$DOTFILES" -maxdepth 2 \( -name links.prop -o -name "links.$OS.prop" \) -not -path '*/.git/*' | sort)
+
+	if $DRY_RUN; then
+		SUMMARY=$(join_parts \
+			"$L_OK up to date" \
+			"$([[ $L_LINKED -gt 0 ]] && echo "would link $L_LINKED")" \
+			"$([[ $L_BACKUP -gt 0 ]] && echo "would back up $L_BACKUP")" \
+			"$([[ $L_OVERWRITE -gt 0 ]] && echo "would overwrite $L_OVERWRITE")" \
+			"$([[ $L_SKIP -gt 0 ]] && echo "$L_SKIP skipped")" \
+			"$([[ $L_ASK -gt 0 ]] && echo "$L_ASK conflict(s) to decide")")
+	else
+		SUMMARY=$(join_parts \
+			"$L_OK up to date" \
+			"$([[ $L_LINKED -gt 0 ]] && echo "$L_LINKED linked")" \
+			"$([[ $L_BACKUP -gt 0 ]] && echo "$L_BACKUP backed up")" \
+			"$([[ $L_OVERWRITE -gt 0 ]] && echo "$L_OVERWRITE overwritten")" \
+			"$([[ $L_SKIP -gt 0 ]] && echo "$L_SKIP skipped")")
+	fi
 }
 
 # ---------------------------------------------------------------------------
-# Plugins (sheldon, tmux)
+# Step: plugins (sheldon, tmux)
 # ---------------------------------------------------------------------------
-setup_sheldon() {
+step_plugins() {
+	command -v brew &>/dev/null || brew_shellenv || true
+
+	local tpm_dir="$HOME/.tmux/plugins/tpm" n_sheldon n_tmux parts=()
+	n_sheldon=$(grep -c '^\[plugins\.' "$DOTFILES/sheldon/plugins.toml")
+	n_tmux=$(grep -c '^set -g @plugin' "$DOTFILES/tmux/.tmux.conf")
+
+	# sheldon
 	if ! command -v sheldon &>/dev/null; then
-		fail "sheldon is not installed (run: ./install.sh packages)"
-		return
-	fi
-	info "Installing sheldon plugins..."
-	if sheldon lock; then
-		success "sheldon plugins installed"
+		if $DRY_RUN; then
+			parts+=("sheldon not installed yet (needs packages)")
+		else
+			bad "sheldon is not installed (run: ./install.sh packages)"
+		fi
+	elif $DRY_RUN; then
+		say "would run: sheldon lock"
+		parts+=("would sync $n_sheldon sheldon")
+	elif run sheldon lock; then
+		parts+=("$n_sheldon sheldon")
 	else
-		fail "sheldon lock failed"
+		bad "sheldon lock failed"
 	fi
-}
 
-setup_tmux() {
-	local tpm_dir="$HOME/.tmux/plugins/tpm"
-
+	# tmux plugin manager + plugins
 	if ! command -v tmux &>/dev/null; then
-		fail "tmux is not installed (run: ./install.sh packages)"
-		return
-	fi
-
-	if [[ -d "$tpm_dir" ]]; then
-		success "TPM is already installed"
-	elif git clone --quiet https://github.com/tmux-plugins/tpm "$tpm_dir"; then
-		success "TPM installed"
+		if $DRY_RUN; then
+			parts+=("tmux not installed yet (needs packages)")
+		else
+			bad "tmux is not installed (run: ./install.sh packages)"
+		fi
+	elif $DRY_RUN; then
+		if [[ -d "$tpm_dir" ]]; then
+			say "TPM is installed; would run: tpm install_plugins"
+		else
+			say "would clone TPM, then run: tpm install_plugins"
+		fi
+		parts+=("would sync $n_tmux tmux")
 	else
-		fail "could not clone TPM"
-		return
+		if [[ ! -d "$tpm_dir" ]]; then
+			if run git clone --quiet https://github.com/tmux-plugins/tpm "$tpm_dir"; then
+				say "cloned TPM"
+			else
+				bad "could not clone TPM"
+			fi
+		fi
+		if [[ -d "$tpm_dir" ]]; then
+			tmux new-session -d -s tpm_install 2>/dev/null || true
+			if run "$tpm_dir/bin/install_plugins"; then
+				parts+=("$n_tmux tmux")
+			else
+				bad "tmux plugin install failed"
+			fi
+			tmux kill-session -t tpm_install 2>/dev/null || true
+		fi
 	fi
 
-	info "Installing tmux plugins..."
-	tmux new-session -d -s tpm_install 2>/dev/null || true
-	if "$tpm_dir/bin/install_plugins"; then
-		success "tmux plugins installed"
-	else
-		fail "tmux plugin install failed"
-	fi
-	tmux kill-session -t tpm_install 2>/dev/null || true
-}
-
-install_plugins() {
-	setup_sheldon
-	setup_tmux
+	SUMMARY=$(join_parts "${parts[@]+"${parts[@]}"}")
+	[[ -n "$SUMMARY" ]] && ! $DRY_RUN && [[ $N_FAILED -eq 0 ]] && SUMMARY="$SUMMARY plugins"
+	[[ -n "$SUMMARY" ]] || SUMMARY="nothing to do"
 }
 
 # ---------------------------------------------------------------------------
-# Main
+# Runner and main
 # ---------------------------------------------------------------------------
+# run_step <index> <total> <name>
+run_step() {
+	local idx=$1 total=$2 name=$3 start=$SECONDS elapsed mark color
+	STEP_NAME=$name
+	STEP_LOG="$LOG_DIR/$name.log"
+	: >"$STEP_LOG"
+	SUMMARY=
+	N_FAILED=0
+	LAST_FAIL=
+
+	if $VERBOSE; then
+		printf '%s==> [%d/%d] %s%s\n' "$DIM" "$idx" "$total" "$name" "$RESET"
+	elif $TTY; then
+		printf '[%d/%d] %-9s %s...%s' "$idx" "$total" "$name" "$DIM" "$RESET"
+	fi
+
+	"step_$name"
+
+	elapsed=$((SECONDS - start))
+	if [[ $N_FAILED -gt 0 ]]; then
+		mark='✗' color=$RED
+		if [[ $N_FAILED -eq 1 ]]; then SUMMARY=$LAST_FAIL; else SUMMARY="$N_FAILED failures, see below"; fi
+	elif $DRY_RUN; then
+		mark='~' color=$YELLOW
+	else
+		mark='✓' color=$GREEN
+	fi
+	$TTY && ! $VERBOSE && printf '\r\033[2K'
+	printf '[%d/%d] %-9s %s%s%s %-58s %s%s%s\n' "$idx" "$total" "$name" "$color" "$mark" "$RESET" "$SUMMARY" "$DIM" "$([[ $elapsed -ge 1 ]] && echo "${elapsed}s" || echo '<1s')" "$RESET"
+
+	# quiet mode: show the tail of the log for a failed step
+	if [[ $N_FAILED -gt 0 ]] && ! $VERBOSE; then
+		tail -n 20 "$STEP_LOG" | sed 's/^/        /'
+		printf '        full log: %s\n' "$STEP_LOG"
+	fi
+}
+
 usage() {
 	sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
 }
 
-main() {
-	local steps=("$@") step
-	[[ ${#steps[@]} -gt 0 ]] || steps=(packages links plugins)
+cleanup() {
+	[[ -n "$LOG_DIR" && ${#FAILURES[@]} -eq 0 ]] && rm -rf "$LOG_DIR"
+	return 0
+}
 
-	for step in "${steps[@]}"; do
-		case "$step" in
+main() {
+	local steps=() step i=0 total start=$SECONDS
+
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
 		-h | --help | help)
 			usage
 			exit 0
 			;;
-		packages | links | plugins) ;;
+		-v | --verbose) VERBOSE=true ;;
+		-n | --dry-run) DRY_RUN=true ;;
+		packages | links | plugins) steps+=("$1") ;;
 		*)
-			echo "unknown step: $step (expected: packages, links, plugins)" >&2
+			echo "unknown argument: $1 (see ./install.sh --help)" >&2
 			exit 2
 			;;
 		esac
+		shift
 	done
+	[[ ${#steps[@]} -gt 0 ]] || steps=(packages links plugins)
+	total=${#steps[@]}
 
-	echo ""
-	info "Dotfiles: $DOTFILES ($OS), steps: ${steps[*]}, on conflict: $CONFLICT_POLICY"
-	echo ""
+	LOG_DIR=$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-install.XXXXXX")
+	trap cleanup EXIT
+
+	printf '%sdotfiles · %s · %s%s%s\n' "$DIM" "$OS" "$DOTFILES" "$($DRY_RUN && echo ' · DRY RUN, nothing will be changed')" "$RESET"
+	echo
 
 	for step in "${steps[@]}"; do
-		case "$step" in
-		packages) install_packages ;;
-		links) install_links ;;
-		plugins)
-			# plugins need brew-installed tools on PATH
-			ensure_brew || true
-			install_plugins
-			;;
-		esac
-		echo ""
+		i=$((i + 1))
+		run_step "$i" "$total" "$step"
 	done
+	echo
 
 	if [[ ${#FAILURES[@]} -gt 0 ]]; then
-		fail "${#FAILURES[@]} step(s) failed:"
-		printf '         - %s\n' "${FAILURES[@]}"
+		printf '%s%d problem(s):%s\n' "$RED" "${#FAILURES[@]}" "$RESET"
+		printf '  - %s\n' "${FAILURES[@]}"
+		printf 'Logs kept in %s\n' "$LOG_DIR"
 		exit 1
 	fi
 
-	success "Done."
-	info "Open a new terminal (or run 'source ~/.zshrc'). For neovim, run 'nvim' once to let LazyVim install plugins."
+	if $DRY_RUN; then
+		echo "Dry run finished in $((SECONDS - start))s. Nothing was changed."
+	else
+		echo "Done in $((SECONDS - start))s. Open a new terminal, or run: source ~/.zshrc"
+		[[ " ${steps[*]} " == *" plugins "* ]] && echo "For neovim, run 'nvim' once to let LazyVim install its plugins."
+	fi
+	return 0
 }
 
 main "$@"
